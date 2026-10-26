@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tra Cứu Bộ Luật Việt Nam (2015)</title>
+    <style>
+        :root {
+            --primary-color: #1a56db;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-size: 24px;
+            text-transform: uppercase;
+        }
+
+        /* Tabs Styling */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            background: transparent;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary-color);
+            background: #f9fafb;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        /* Search Section */
+        .search-box {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        select, input {
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+        }
+
+        select {
+            width: 200px;
+            background-color: #f9fafb;
+            cursor: pointer;
+        }
+
+        input {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        /* Results Section */
+        .results-info {
+            margin-bottom: 15px;
+            font-style: italic;
+            color: var(--text-muted);
+        }
+
+        .article-card {
+            background: #f9fafb;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+        }
+
+        .article-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .article-title {
+            color: var(--primary-color);
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 0;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-content p {
+            margin: 10px 0;
+            text-align: justify;
+        }
+
+        .highlight {
+            background-color: #fef08a;
+            font-weight: bold;
+            color: #b45309;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .no-result {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Tra Cứu Pháp Luật Việt Nam</h1>
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('civil')" id="btn-civil">Dân sự 2015</button>
+        <button class="tab-btn" onclick="switchTab('penal')" id="btn-penal">Hình sự 2015</button>
+    </div>
+
+    <div class="search-box">
+        <select id="search-type">
+            <option value="article">Tra theo Điều (Ví dụ: 1, 579)</option>
+            <option value="keyword">Tra theo Từ khóa (Ví dụ: hợp đồng)</option>
+        </select>
+        <input type="text" id="search-input" placeholder="Nhập số điều hoặc từ khóa cần tìm..." onkeyup="performSearch()">
+    </div>
+
+    <div class="results-info" id="results-info"></div>
+    <div id="results-container"></div>
+</div>
+
+<script>
+    // Dữ liệu giả lập (Cơ sở dữ liệu). Bạn có thể thêm toàn bộ nội dung luật vào mảng này.
+    const database = {
+        civil: [
+            {
+                id: "1",
+                title: "Điều 1. Phạm vi điều chỉnh",
+                content: "Bộ luật này quy định địa vị pháp lý, chuẩn mực pháp lý về cách ứng xử của cá nhân, pháp nhân; quyền, nghĩa vụ về nhân thân và tài sản của cá nhân, pháp nhân trong các quan hệ được hình thành trên cơ sở bình đẳng, tự do ý chí, độc lập về tài sản và tự chịu trách nhiệm (sau đây gọi chung là quan hệ dân sự)."
+            },
+            {
+                id: "116",
+                title: "Điều 116. Giao dịch dân sự",
+                content: "Giao dịch dân sự là hợp đồng hoặc hành vi pháp lý đơn phương làm phát sinh, thay đổi hoặc chấm dứt quyền, nghĩa vụ dân sự."
+            },
+            {
+                id: "385",
+                title: "Điều 385. Khái niệm hợp đồng",
+                content: "Hợp đồng là sự thỏa thuận giữa các bên về việc xác lập, thay đổi hoặc chấm dứt quyền, nghĩa vụ dân sự."
+            },
+            {
+                id: "430",
+                title: "Điều 430. Hợp đồng mua bán tài sản",
+                content: `<p>Hợp đồng mua bán tài sản là sự thỏa thuận giữa các bên, theo đó bên bán chuyển quyền sở hữu tài sản cho bên mua và bên mua trả tiền cho bên bán.</p>
+                          <p>Hợp đồng mua bán nhà ở, mua bán nhà để sử dụng vào mục đích khác được thực hiện theo quy định của Bộ luật này, Luật nhà ở và luật khác có liên quan.</p>`
+            },
+            {
+                id: "579",
+                title: "Điều 579. Nghĩa vụ hoàn trả (Dữ liệu mẫu demo theo yêu cầu)",
+                content: `<p>1. Người chiếm hữu, người sử dụng tài sản của người khác mà không có căn cứ pháp luật thì phải hoàn trả cho chủ sở hữu, chủ thể có quyền khác đối với tài sản đó; nếu không tìm được chủ sở hữu, chủ thể có quyền khác đối với tài sản thì phải giao cho cơ quan nhà nước có thẩm quyền, trừ trường hợp quy định tại Điều 236 của Bộ luật này.</p>
+                          <p>2. Người được lợi về tài sản mà không có căn cứ pháp luật làm cho người khác bị thiệt hại thì phải hoàn trả khoản lợi đó cho người bị thiệt hại, trừ trường hợp quy định tại Điều 236 của Bộ luật này.</p>`
+            }
+        ],
+        penal: [
+            {
+                id: "1",
+                title: "Điều 1. Nhiệm vụ của Bộ luật hình sự",
+                content: "Bộ luật hình sự có nhiệm vụ bảo vệ chủ quyền quốc gia, an ninh của đất nước, bảo vệ chế độ xã hội chủ nghĩa, quyền con người, quyền công dân, bảo vệ quyền bình đẳng giữa đồng bào các dân tộc, bảo vệ lợi ích của Nhà nước, tổ chức, bảo vệ trật tự pháp luật, chống mọi hành vi phạm tội; giáo dục mọi người ý thức tuân theo pháp luật, phòng ngừa và đấu tranh chống tội phạm."
+            },
+            {
+                id: "8",
+                title: "Điều 8. Khái niệm tội phạm",
+                content: `<p>1. Tội phạm là hành vi nguy hiểm cho xã hội được quy định trong Bộ luật hình sự, do người có năng lực trách nhiệm hình sự hoặc pháp nhân thương mại thực hiện một cách cố ý hoặc vô ý, xâm phạm độc lập, chủ quyền, thống nhất, toàn vẹn lãnh thổ Tổ quốc, xâm phạm chế độ chính trị, chế độ kinh tế, nền văn hóa, quốc phòng, an ninh, trật tự, an toàn xã hội, quyền, lợi ích hợp pháp của tổ chức, xâm phạm quyền con người, quyền, lợi ích hợp pháp của công dân, xâm phạm những lĩnh vực khác của trật tự pháp luật xã hội chủ nghĩa mà theo quy định của Bộ luật này phải bị xử lý hình sự.</p>
+                          <p>2. Những hành vi tuy có dấu hiệu của tội phạm nhưng tính chất nguy hiểm cho xã hội không đáng kể thì không phải là tội phạm và được xử lý bằng các biện pháp khác.</p>`
+            }
+        ]
+    };
+
+    let currentMode = 'civil';
+
+    // Hàm chuyển đổi Tab giữa Dân sự và Hình sự
+    function switchTab(mode) {
+        currentMode = mode;
+        
+        // Cập nhật giao diện UI cho Tab
+        document.getElementById('btn-civil').classList.remove('active');
+        document.getElementById('btn-penal').classList.remove('active');
+        document.getElementById(`btn-${mode}`).classList.add('active');
+
+        // Reset ô tìm kiếm và thực hiện tìm kiếm lại với mảng dữ liệu mới
+        document.getElementById('search-input').value = '';
+        performSearch();
+    }
+
+    // Hàm highlight từ khóa bằng regex
+    function highlightKeyword(text, keyword) {
+        if (!keyword) return text;
+        const regex = new RegExp(`(${keyword})`, 'gi');
+        return text.replace(regex, '<span class="highlight">$1</span>');
+    }
+
+    // Hàm tìm kiếm và hiển thị kết quả chính
+    function performSearch() {
+        const searchType = document.getElementById('search-type').value;
+        const searchInput = document.getElementById('search-input').value.trim().toLowerCase();
+        const container = document.getElementById('results-container');
+        const info = document.getElementById('results-info');
+        
+        const currentData = database[currentMode];
+        let results = [];
+
+        // Lọc dữ liệu
+        if (searchInput === '') {
+            results = currentData; // Nếu không nhập gì, hiển thị tất cả (hoặc có thể cấu hình để rỗng)
+        } else {
+            results = currentData.filter(item => {
+                if (searchType === 'article') {
+                    // Tìm chính xác số Điều luật
+                    return item.id === searchInput;
+                } else {
+                    // Tìm theo từ khóa trong tiêu đề hoặc nội dung
+                    return item.title.toLowerCase().includes(searchInput) || 
+                           item.content.toLowerCase().includes(searchInput);
+                }
+            });
+        }
+
+        // Render HTML
+        if (results.length === 0) {
+            info.innerHTML = `Không tìm thấy kết quả phù hợp cho: "<b>${searchInput}</b>"`;
+            container.innerHTML = `<div class="no-result">Không có dữ liệu. Vui lòng thử số điều hoặc từ khóa khác.</div>`;
+            return;
+        }
+
+        info.innerHTML = searchInput ? `Tìm thấy <b>${results.length}</b> kết quả phù hợp.` : 'Đang hiển thị các điều luật tiêu biểu:';
+        
+        let html = '';
+        results.forEach(item => {
+            // Nếu tra cứu theo từ khóa, tiến hành highlight chữ
+            let displayTitle = item.title;
+            let displayContent = item.content;
+
+            if (searchType === 'keyword' && searchInput !== '') {
+                displayTitle = highlightKeyword(item.title, searchInput);
+                displayContent = highlightKeyword(item.content, searchInput);
+            }
+
+            html += `
+                <div class="article-card">
+                    <h2 class="article-title">${displayTitle}</h2>
+                    <div class="article-content">${displayContent}</div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    // Lắng nghe sự thay đổi của Dropdown chọn loại tìm kiếm
+    document.getElementById('search-type').addEventListener('change', performSearch);
+
+    // Khởi chạy hiển thị dữ liệu ngay khi tải trang
+    window.onload = performSearch;
+</script>
+
+</body>
+</html>
