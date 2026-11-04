@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Giải bài tập Kinh tế học Vi mô</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        
+        /* Custom Scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        .math-block {
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        /* Sidebar transition for mobile */
+        #sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+        @media (max-width: 768px) {
+            #sidebar {
+                position: fixed;
+                z-index: 40;
+                height: calc(100vh - 4rem); /* Subtract header height */
+                transform: translateX(-100%);
+            }
+            #sidebar.open {
+                transform: translateX(0);
+            }
+        }
+    </style>
+
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']],
+                processEscapes: true
+            },
+            svg: {
+                fontCache: 'global'
+            },
+            startup: {
+                typeset: false // We will trigger typeset manually
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body class="flex flex-col h-screen overflow-hidden text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-blue-700 text-white shadow-md z-50 h-16 flex items-center px-4 justify-between shrink-0">
+        <div class="flex items-center gap-3">
+            <button id="mobile-menu-btn" class="md:hidden p-2 rounded hover:bg-blue-600 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+            <div class="flex items-center gap-2">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                <h1 class="text-xl font-bold tracking-tight leading-tight hidden sm:block">Hệ thống Giải bài tập Kinh tế học Vi mô</h1>
+                <h1 class="text-lg font-bold tracking-tight leading-tight sm:hidden">Kinh tế Vi mô</h1>
+            </div>
+        </div>
+        <div class="text-sm font-medium bg-blue-800 px-3 py-1 rounded-full hidden md:block">
+            Ôn tập & Luyện thi
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="flex flex-1 overflow-hidden relative">
+        
+        <!-- Overlay for mobile sidebar -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden"></div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 shadow-sm flex flex-col shrink-0">
+            <div class="p-4 border-b border-slate-100">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Danh mục</h2>
+            </div>
+            <nav class="flex-1 overflow-y-auto p-3 space-y-1" id="nav-menu">
+                <!-- Navigation items injected via JS -->
+            </nav>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="flex-1 overflow-y-auto bg-slate-50 relative w-full">
+            <div class="max-w-4xl mx-auto p-4 md:p-8 w-full" id="content-container">
+                <!-- Content injected via JS -->
+                <div class="flex items-center justify-center h-full text-slate-400">
+                    Đang tải dữ liệu...
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Data Definitions ---
+        const studyData = [
+            {
+                id: 'formulas',
+                title: 'Ký hiệu & Công thức',
+                type: 'reference',
+                content: `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8 mb-6">
+                        <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                            <div class="bg-indigo-100 text-indigo-600 p-2 rounded-lg">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <h2 class="text-2xl font-bold text-slate-800">Bảng Ký hiệu & Công thức Lõi</h2>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- Ký hiệu -->
+                            <div>
+                                <h3 class="text-lg font-semibold text-indigo-700 mb-4 flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                                    Thuật ngữ & Ký hiệu
+                                </h3>
+                                <ul class="space-y-3 text-slate-700">
+                                    <li class="flex items-start"><span class="font-bold w-20 shrink-0 text-slate-900">Q:</span> <span>Sản lượng (Quantity)</span></li>
+                                    <li class="flex items-start"><span class="font-bold w-20 shrink-0 text-slate-900">P:</span> <span>Giá cả (Price)</span></li>
+                                    <li class="flex items-start"><span class="font-bold w-20 shrink-0 text-slate-900">TC:</span> <span>Tổng chi phí (Total Cost)</span></li>
+                                    <li class="flex items-start"><span class="font-bold w-20 shrink-0 text-slate-900">TR:</span> <span>Tổng doanh thu (Total Revenue)</span></li>
+                                    <li class="flex items-start"><span class="font-bold w-20 shrink-0 text-slate-900">MR:</span> <span>Doanh thu cận biên (Marginal Revenue)</span></li>
+                                    <li class="flex items-start"><span class="font-bold w-20 shrink-0 text-slate-900">MC:</span> <span>Chi phí cận biên (Marginal Cost)</span></li>
+                                    <li class="flex items-start"><span class="font-bold w-20 shrink-0 text-slate-900">AC/ATC:</span> <span>Tổng chi phí bình quân (Average Total Cost)</span></li>
+                                    <li class="flex items-start"><span class="font-bold w-20 shrink-0 text-slate-900">AVC:</span> <span>Chi phí biến đổi bình quân</span></li>
+                                    <li class="flex items-start"><span class="font-bold w-20 shrink-0 text-slate-900">AFC:</span> <span>Chi phí cố định bình quân</span></li>
+                                    <li class="flex items-start"><span class="font-bold w-20 shrink-0 text-slate-900">FC:</span> <span>Chi phí cố định (Fixed Cost)</span></li>
+                                    <li class="flex items-start"><span class="font-bold w-20 shrink-0 text-slate-900">VC:</span> <span>Chi phí biến đổi (Variable Cost)</span></li>
+                                    <li class="flex items-start"><span class="font-bold w-20 shrink-0 text-slate-900">TU:</span> <span>Tổng lợi ích (Total Utility)</span></li>
+                                    <li class="flex items-start"><span class="font-bold w-20 shrink-0 text-slate-900">MU:</span> <span>Lợi ích cận biên (Marginal Utility)</span></li>
+                                    <li class="flex items-start"><span class="font-bold w-20 shrink-0 text-slate-900">\\( E_D \\):</span> <span>Độ co giãn của cầu theo giá</span></li>
+                                </ul>
+                            </div>
+                            
+                            <!-- Công thức -->
+                            <div>
+                                <h3 class="text-lg font-semibold text-indigo-700 mb-4 flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7c-3 0-4 3-4 5s1 5 4 5 4-3 4-5-1-5-4-5zM9 7v2m0 8v2m-6-5h2m10 0h2m-6 3a3 3 0 000-6v6z"></path></svg>
+                                    Công thức Lõi
+                                </h3>
+                                <div class="space-y-4">
+                                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                        <p class="font-semibold text-slate-800 mb-1">Lợi nhuận (\\( \\pi \\))</p>
+                                        <div class="math-block">\\[ \\pi = TR - TC \\]</div>
+                                    </div>
+                                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                        <p class="font-semibold text-slate-800 mb-1">Tối đa hóa lợi nhuận</p>
+                                        <ul class="list-disc pl-5 text-slate-600 text-sm space-y-1 mt-2">
+                                            <li>Độc quyền: \\( MR = MC \\)</li>
+                                            <li>Cạnh tranh hoàn hảo: \\( P = MC \\)</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                        <p class="font-semibold text-slate-800 mb-1">Tối đa hóa doanh thu</p>
+                                        <div class="math-block">\\[ MR = 0 \\quad \\text{hoặc} \\quad |E_D| = 1 \\]</div>
+                                    </div>
+                                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                        <p class="font-semibold text-slate-800 mb-1">Điểm tới hạn</p>
+                                        <ul class="list-disc pl-5 text-slate-600 text-sm space-y-1 mt-2">
+                                            <li>Điểm đóng cửa: \\( P = \\min(AVC) \\)</li>
+                                            <li>Điểm hòa vốn: \\( P = \\min(ATC) \\)</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                        <p class="font-semibold text-slate-800 mb-1">Tối đa hóa lợi ích tiêu dùng</p>
+                                        <div class="math-block">\\[ \\frac{MU_X}{P_X} = \\frac{MU_Y}{P_Y} \\]</div>
+                                        <div class="math-block">\\[ X \\cdot P_X + Y \\cdot P_Y = I \\]</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'bai-1',
+                title: 'Bài 1: Chi phí cơ hội & PPF',
+                type: 'exercise',
+                content: `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Bài 1: Giới hạn khả năng sản xuất (PPF)</h2>
+                        
+                        <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg mb-6">
+                            <h4 class="font-bold text-amber-800 mb-2">Công thức áp dụng:</h4>
+                            <p class="text-amber-900">Chi phí cơ hội (CPCH) = \\( \\left| \\frac{\\Delta Y}{\\Delta X} \\right| \\)</p>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <h4 class="font-semibold text-blue-700 mb-2">a. Đường giới hạn khả năng sản xuất (PPF)</h4>
+                                <p class="text-slate-700">Đường PPF là đường cong nối các điểm kết hợp sản xuất tối đa: A(0, 31), B(10, 25), C(18, 17), D(23, 11), E(27, 0). Trục hoành biểu diễn Lương thực, trục tung biểu diễn Quần áo.</p>
+                            </div>
+
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <h4 class="font-semibold text-blue-700 mb-2">b. Tính chi phí cơ hội của việc sản xuất quần áo</h4>
+                                <p class="text-slate-700 mb-2">Chi phí cơ hội của việc sản xuất thêm quần áo là lượng lương thực phải từ bỏ.</p>
+                                <p class="text-slate-700 mb-2">Xét sự di chuyển từ phương án A sang B (tăng sản xuất lương thực, giảm quần áo), ta tính ngược lại CPCH của 1 đơn vị quần áo khi di chuyển từ B về A:</p>
+                                <div class="math-block">\\[ CPCH = \\left| \\frac{\\Delta \\text{Lương thực}}{\\Delta \\text{Quần áo}} \\right| = \\left| \\frac{10 - 0}{25 - 31} \\right| = \\frac{10}{6} \\approx 1.67 \\]</div>
+                                <p class="text-slate-700 text-sm italic mt-2">*(Lưu ý: Đề bài yêu cầu tính CPCH của việc sản xuất quần áo, tức là số lương thực từ bỏ / số quần áo tăng thêm giữa các phương án)*.</p>
+                                <p class="text-slate-700">Ví dụ từ C -> B (Tăng quần áo từ 17 lên 25, Lương thực giảm từ 18 xuống 10):<br> \\( CPCH = \\left| \\frac{10 - 18}{25 - 17} \\right| = \\frac{8}{8} = 1 \\) đơn vị lương thực.</p>
+                            </div>
+
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <h4 class="font-semibold text-blue-700 mb-2">c. Khả năng sản xuất 20 triệu tấn lương thực và 18 nghìn bộ quần áo</h4>
+                                <p class="text-slate-700"><strong>Kết luận: Không.</strong></p>
+                                <p class="text-slate-700 mt-2"><strong>Giải thích:</strong> Nhìn vào bảng số liệu, tại phương án C, khi sản xuất 18 triệu tấn lương thực thì tối đa chỉ sản xuất được 17 nghìn bộ quần áo. Nếu muốn sản xuất 20 triệu tấn lương thực (nằm giữa C và D), lượng quần áo tối đa chắc chắn phải nhỏ hơn 17. Do đó, tổ hợp (20 lương thực, 18 quần áo) nằm ngoài đường PPF, vượt quá khả năng của nền kinh tế với nguồn lực hiện tại.</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'bai-2',
+                title: 'Bài 2: Cung Cầu & Can thiệp Chính phủ',
+                type: 'exercise',
+                content: `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-4 border-b border-slate-100 pb-4">Bài 2: Phân tích thị trường, Thuế & Trợ cấp</h2>
+                        
+                        <p class="text-slate-600 mb-6 font-medium bg-slate-100 p-3 rounded">Hàm số cho trước: \\( Q^D = 130 - 2P \\) và \\( Q^S = 20 + 2P \\)</p>
+
+                        <div class="space-y-4">
+                            <div class="p-4 border-l-4 border-blue-500 bg-blue-50/50 rounded-r-lg">
+                                <h4 class="font-bold text-slate-800 mb-2">a. Xác định giá và lượng cân bằng thị trường</h4>
+                                <p class="text-slate-700">Thị trường cân bằng khi Lượng cầu bằng Lượng cung:</p>
+                                <div class="math-block">\\[ Q^D = Q^S \\Rightarrow 130 - 2P = 20 + 2P \\]</div>
+                                <div class="math-block">\\[ \\Rightarrow 4P = 110 \\Rightarrow P_E = 27.5 \\]</div>
+                                <p class="text-slate-700">Thay \\( P_E \\) vào hàm cung hoặc cầu: \\( Q_E = 20 + 2(27.5) = 75 \\).</p>
+                                <p class="font-medium text-blue-700 mt-2">Kết quả: \\( P_E = 27.5 \\), \\( Q_E = 75 \\)</p>
+                            </div>
+
+                            <div class="p-4 border-l-4 border-emerald-500 bg-emerald-50/50 rounded-r-lg">
+                                <h4 class="font-bold text-slate-800 mb-2">b. Tối đa hóa tổng doanh thu (TR)</h4>
+                                <p class="text-slate-700 mb-2">Từ hàm cầu: \\( Q = 130 - 2P \\Rightarrow 2P = 130 - Q \\Rightarrow P = 65 - 0.5Q \\)</p>
+                                <p class="text-slate-700 mb-2">Hàm tổng doanh thu: \\( TR = P \\cdot Q = (65 - 0.5Q)Q = 65Q - 0.5Q^2 \\)</p>
+                                <p class="text-slate-700 mb-2">Doanh thu cận biên (đạo hàm TR): \\( MR = 65 - Q \\)</p>
+                                <p class="text-slate-700">Doanh thu tối đa khi \\( MR = 0 \\):</p>
+                                <div class="math-block">\\[ 65 - Q = 0 \\Rightarrow Q = 65 \\]</div>
+                                <p class="text-slate-700">Giá bán tương ứng: \\( P = 65 - 0.5(65) = 32.5 \\)</p>
+                                <p class="font-medium text-emerald-700 mt-2">Kết quả: \\( TR_{\\max} = 32.5 \\times 65 = 2112.5 \\)</p>
+                            </div>
+
+                            <div class="p-4 border-l-4 border-purple-500 bg-purple-50/50 rounded-r-lg">
+                                <h4 class="font-bold text-slate-800 mb-2">c. Lượng cầu tăng 10%</h4>
+                                <ul class="list-disc pl-5 text-slate-700 space-y-2">
+                                    <li><strong>Dịch chuyển:</strong> Lượng cầu tăng ở mọi mức giá nghĩa là cầu tăng. Đường cầu sẽ <strong>dịch chuyển sang phải</strong>.</li>
+                                    <li><strong>Hàm cầu mới:</strong> \\( Q^{D'} = Q^D + 10\\% Q^D = 1.1 \\times (130 - 2P) = 143 - 2.2P \\)</li>
+                                    <li><strong>Cân bằng mới:</strong> \\( Q^{D'} = Q^S \\Rightarrow 143 - 2.2P = 20 + 2P \\)
+                                        <div class="math-block">\\[ 4.2P = 123 \\Rightarrow P' \\approx 29.28 \\]</div>
+                                        <p>Thay \\( P' \\): \\( Q' = 20 + 2(29.28) = 78.56 \\)</p>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="p-4 border-l-4 border-orange-500 bg-orange-50/50 rounded-r-lg">
+                                <h4 class="font-bold text-slate-800 mb-2">d. Dư thừa, thiếu hụt và Độ co giãn</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                                    <div class="bg-white p-3 rounded shadow-sm border border-slate-100">
+                                        <p class="font-semibold mb-1">Tại mức giá P = 10:</p>
+                                        <p class="text-sm text-slate-700">\\( Q^D = 130 - 2(10) = 110 \\)</p>
+                                        <p class="text-sm text-slate-700">\\( Q^S = 20 + 2(10) = 40 \\)</p>
+                                        <p class="text-sm text-red-600 font-medium mt-1">\\( Q^D > Q^S \\) => Thiếu hụt = 70</p>
+                                        <p class="text-sm text-slate-700 mt-2">Độ co giãn: \\( E_D = -2 \\cdot \\frac{10}{110} = -0.18 \\)</p>
+                                        <p class="text-xs text-slate-500">(Cầu rất kém co giãn)</p>
+                                    </div>
+                                    <div class="bg-white p-3 rounded shadow-sm border border-slate-100">
+                                        <p class="font-semibold mb-1">Tại mức giá P = 20:</p>
+                                        <p class="text-sm text-slate-700">\\( Q^D = 130 - 2(20) = 90 \\)</p>
+                                        <p class="text-sm text-slate-700">\\( Q^S = 20 + 2(20) = 60 \\)</p>
+                                        <p class="text-sm text-red-600 font-medium mt-1">\\( Q^D > Q^S \\) => Thiếu hụt = 30</p>
+                                        <p class="text-sm text-slate-700 mt-2">Độ co giãn: \\( E_D = -2 \\cdot \\frac{20}{90} = -0.44 \\)</p>
+                                        <p class="text-xs text-slate-500">(Cầu kém co giãn)</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 border-l-4 border-red-500 bg-red-50/50 rounded-r-lg">
+                                <h4 class="font-bold text-slate-800 mb-2">e. Thuế t = 2/sp (Giả sử đánh vào người sản xuất)</h4>
+                                <p class="text-slate-700 mb-2">Giá người sản xuất thực nhận: \\( P_S = P_D - t = P_D - 2 \\)</p>
+                                <p class="text-slate-700 mb-2">Hàm cung mới theo giá người mua trả (\\( P_D \\)): \\( Q^{S'} = 20 + 2(P_D - 2) = 16 + 2P_D \\)</p>
+                                <p class="text-slate-700">Cân bằng mới: \\( Q^D = Q^{S'} \\)</p>
+                                <div class="math-block">\\[ 130 - 2P_D = 16 + 2P_D \\Rightarrow 4P_D = 114 \\Rightarrow P_{mua} = 28.5 \\]</div>
+                                <p class="text-slate-700">Lượng mới: \\( Q_t = 130 - 2(28.5) = 73 \\)</p>
+                                <p class="text-slate-700 text-sm mt-1">Giá NSX nhận: \\( P_{ban} = 28.5 - 2 = 26.5 \\)</p>
+                            </div>
+
+                            <div class="p-4 border-l-4 border-teal-500 bg-teal-50/50 rounded-r-lg">
+                                <h4 class="font-bold text-slate-800 mb-2">f. Trợ cấp s = 2/sp</h4>
+                                <p class="text-slate-700 mb-2">Hàm cung mới: \\( Q^{S'} = 20 + 2(P + 2) = 24 + 2P \\)</p>
+                                <p class="text-slate-700">Cân bằng mới:</p>
+                                <div class="math-block">\\[ 130 - 2P = 24 + 2P \\Rightarrow 4P = 106 \\Rightarrow P_{mua} = 26.5 \\]</div>
+                                <p class="text-slate-700">Lượng mới: \\( Q_s = 130 - 2(26.5) = 77 \\)</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'bai-3',
+                title: 'Bài 3: Thiết lập hàm Cung Cầu',
+                type: 'exercise',
+                content: `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Bài 3: Xây dựng hàm số từ dữ liệu bảng</h2>
+                        
+                        <div class="space-y-6">
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <h4 class="font-semibold text-blue-700 mb-3">a. Thiết lập hàm cung, hàm cầu thị trường</h4>
+                                <p class="text-slate-700 mb-2">Giả sử các hàm số có dạng tuyến tính: \\( Q = aP + b \\)</p>
+                                
+                                <div class="mb-4">
+                                    <p class="font-medium text-slate-800">1. Hàm cầu (\\( Q^D \\)):</p>
+                                    <p class="text-slate-700">Chọn 2 điểm từ bảng: (P=3, Q=70) và (P=6, Q=60). Giải hệ phương trình:</p>
+                                    <div class="math-block">\\[ \\begin{cases} 70 = 3a + b \\\\ 60 = 6a + b \\end{cases} \\Rightarrow \\begin{cases} 3a = -10 \\Rightarrow a = -\\frac{10}{3} \\\\ b = 80 \\end{cases} \\]</div>
+                                    <p class="text-slate-700 font-medium bg-blue-100 p-2 rounded inline-block">Hàm cầu: \\( Q^D = -\\frac{10}{3}P + 80 \\)</p>
+                                </div>
+                                
+                                <div>
+                                    <p class="font-medium text-slate-800">2. Hàm cung (\\( Q^S \\)):</p>
+                                    <p class="text-slate-700">Chọn 2 điểm: (P=6, Q=15) và (P=9, Q=30):</p>
+                                    <div class="math-block">\\[ \\begin{cases} 15 = 6a + b \\\\ 30 = 9a + b \\end{cases} \\Rightarrow \\begin{cases} 3a = 15 \\Rightarrow a = 5 \\\\ b = -15 \\end{cases} \\]</div>
+                                    <p class="text-slate-700 font-medium bg-blue-100 p-2 rounded inline-block">Hàm cung: \\( Q^S = 5P - 15 \\)</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <h4 class="font-semibold text-blue-700 mb-3">b. Xác định giá và lượng cân bằng</h4>
+                                <p class="text-slate-700 mb-2">Cân bằng thị trường: \\( Q^D = Q^S \\)</p>
+                                <div class="math-block">\\[ 80 - \\frac{10}{3}P = 5P - 15 \\Rightarrow 95 = \\frac{25}{3}P \\Rightarrow P_E = 95 \\times \\frac{3}{25} = 11.4 \\]</div>
+                                <p class="text-slate-700">Thay vào hàm cung: \\( Q_E = 5(11.4) - 15 = 42 \\).</p>
+                                <p class="text-slate-700 mt-2"><strong>Kết luận:</strong> Giá cân bằng 11.4 tr.đ/tấn, Lượng cân bằng 42 tấn.</p>
+                            </div>
+
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <h4 class="font-semibold text-blue-700 mb-3">c. Thuế tiêu thụ 0.5 tr.đ/tấn</h4>
+                                <p class="text-slate-700 mb-2">Thuế làm đường cung dịch chuyển sang trái (lên trên). Lượng cung tại mỗi mức giá người mua trả sẽ giảm.</p>
+                                <p class="text-slate-700 mb-2">Hàm cung mới: \\( Q^{S'} = 5(P - 0.5) - 15 = 5P - 17.5 \\)</p>
+                                <p class="text-slate-700 mb-2">Điểm cân bằng mới:</p>
+                                <div class="math-block">\\[ 80 - \\frac{10}{3}P = 5P - 17.5 \\Rightarrow 97.5 = \\frac{25}{3}P \\Rightarrow P' = 11.7 \\]</div>
+                                <p class="text-slate-700">Lượng cân bằng mới: \\( Q' = 5(11.7) - 17.5 = 41 \\).</p>
+                                <p class="text-slate-700 mt-2 font-medium">Tác động: Giá cân bằng tăng từ 11.4 lên 11.7. Lượng cân bằng giảm từ 42 xuống 41 tấn.</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'bai-4',
+                title: 'Bài 4: Tác động của Giá trần, Giá sàn & Thuế',
+                type: 'exercise',
+                content: `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Bài 4: Áp đặt giá & Thuế</h2>
+                        
+                        <div class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                    <h4 class="font-semibold text-blue-700 mb-2">a. Hàm cung, hàm cầu</h4>
+                                    <p class="text-slate-700 text-sm">Từ dữ liệu bảng (P=7, Q_D=20; P=8, Q_D=19), tính tương tự Bài 3:</p>
+                                    <ul class="list-disc pl-5 mt-2 space-y-1 text-slate-800 font-medium">
+                                        <li>Hàm cầu: \\( Q^D = 27 - P \\)</li>
+                                        <li>Hàm cung: \\( Q^S = 2P - 3 \\)</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                    <h4 class="font-semibold text-blue-700 mb-2">b. Cân bằng thị trường</h4>
+                                    <div class="math-block">\\[ 27 - P = 2P - 3 \\Rightarrow 3P = 30 \\]</div>
+                                    <p class="text-slate-700 mt-2 font-bold text-lg text-center">\\( P_E = 10, Q_E = 17 \\)</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-red-50 p-5 rounded-lg border border-red-200">
+                                <h4 class="font-semibold text-red-700 mb-2">c. Chính phủ áp đặt giá P = 11.5 tr.đ/tấn</h4>
+                                <p class="text-slate-700 mb-2">Vì \\( P = 11.5 > P_E = 10 \\), đây là <strong>giá sàn</strong> có hiệu lực.</p>
+                                <p class="text-slate-700 mb-1">Thay \\( P = 11.5 \\) vào các hàm:</p>
+                                <ul class="list-disc pl-5 text-slate-700 space-y-1">
+                                    <li>Lượng cầu: \\( Q^D = 27 - 11.5 = 15.5 \\) tấn</li>
+                                    <li>Lượng cung: \\( Q^S = 2(11.5) - 3 = 20 \\) tấn</li>
+                                </ul>
+                                <p class="text-slate-700 mt-3 font-medium">Hiện tượng: <strong>Dư thừa</strong> hàng hóa trên thị trường.</p>
+                                <p class="text-slate-700">Lượng dư thừa = \\( Q^S - Q^D = 20 - 15.5 = 4.5 \\) tấn.</p>
+                            </div>
+
+                            <div class="bg-blue-50 p-5 rounded-lg border border-blue-200">
+                                <h4 class="font-semibold text-blue-700 mb-2">d. Thuế 1 tr.đ/tấn</h4>
+                                <p class="text-slate-700 mb-2">Hàm cung mới: \\( Q^{S'} = 2(P - 1) - 3 = 2P - 5 \\)</p>
+                                <p class="text-slate-700 mb-2">Cân bằng mới: \\( 27 - P = 2P - 5 \\Rightarrow 3P = 32 \\Rightarrow P_D \\approx 10.67 \\)</p>
+                                <p class="text-slate-700 mb-3">Lượng mới: \\( Q' = 27 - 10.67 = 16.33 \\)</p>
+                                
+                                <div class="bg-white p-3 rounded shadow-sm">
+                                    <p class="font-semibold mb-2 text-slate-800">Tác động của thuế (Phân bổ gánh nặng):</p>
+                                    <ul class="text-sm space-y-2 text-slate-700">
+                                        <li>Người tiêu dùng trả: 10.67 (Tăng 0.67 so với cũ). => <strong>Người tiêu dùng chịu 0.67 tr.đ/tấn.</strong></li>
+                                        <li>Người sản xuất nhận: \\( 10.67 - 1 = 9.67 \\) (Giảm 0.33 so với cũ). => <strong>Người sản xuất chịu 0.33 tr.đ/tấn.</strong></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'bai-5',
+                title: 'Bài 5: Lựa chọn tiêu dùng tối ưu (Hàm TU)',
+                type: 'exercise',
+                content: `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Bài 5: Tối đa hóa lợi ích người tiêu dùng</h2>
+                        
+                        <div class="bg-slate-100 p-4 rounded-lg mb-6 flex flex-col md:flex-row gap-4 justify-between items-center text-slate-700">
+                            <div><strong>Hàm lợi ích:</strong> \\( TU = 20XY \\)</div>
+                            <div><strong>Ngân sách:</strong> \\( I = 5,000,000 \\) đ</div>
+                            <div><strong>Giá:</strong> \\( P_X = 100k, P_Y = 20k \\)</div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <h4 class="font-semibold text-blue-700 mb-3">a. Cơ cấu tiêu dùng tối ưu ban đầu</h4>
+                                
+                                <p class="text-slate-700 mb-2">1. Tính lợi ích cận biên (Đạo hàm riêng của TU):</p>
+                                <div class="math-block">\\[ MU_X = \\frac{\\partial TU}{\\partial X} = 20Y \\]</div>
+                                <div class="math-block">\\[ MU_Y = \\frac{\\partial TU}{\\partial Y} = 20X \\]</div>
+                                
+                                <p class="text-slate-700 mt-4 mb-2">2. Thiết lập hệ phương trình tối đa hóa lợi ích:</p>
+                                <div class="bg-white p-4 rounded border border-slate-200 shadow-sm">
+                                    <div class="math-block">\\[ \\begin{cases} \\frac{MU_X}{P_X} = \\frac{MU_Y}{P_Y} \\\\[10pt] X \\cdot P_X + Y \\cdot P_Y = I \\end{cases} \\Rightarrow \\begin{cases} \\frac{20Y}{100} = \\frac{20X}{20} \\\\[10pt] 100X + 20Y = 5000 \\end{cases} \\]</div>
+                                </div>
+                                
+                                <p class="text-slate-700 mt-4 mb-2">3. Giải hệ:</p>
+                                <p class="text-slate-700 ml-4">Từ PT(1): \\( Y = 5X \\)</p>
+                                <p class="text-slate-700 ml-4">Thay vào PT(2): \\( 100X + 20(5X) = 5000 \\Rightarrow 200X = 5000 \\Rightarrow X = 25 \\)</p>
+                                <p class="text-slate-700 ml-4">Suy ra: \\( Y = 5(25) = 125 \\)</p>
+                                
+                                <p class="text-emerald-700 font-bold mt-4">Kết luận: Mua 25 sản phẩm X và 125 sản phẩm Y.</p>
+                            </div>
+
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <h4 class="font-semibold text-blue-700 mb-3">b. Khi giá hàng hóa X giảm xuống 50.000đ</h4>
+                                <p class="text-slate-700 mb-2">Giá mới: \\( P_X' = 50k \\)</p>
+                                <p class="text-slate-700 mb-2">Điều kiện tối ưu mới:</p>
+                                <div class="math-block">\\[ \\frac{20Y}{50} = \\frac{20X}{20} \\Rightarrow Y = 2.5X \\]</div>
+                                
+                                <p class="text-slate-700 mt-3 mb-2">Phương trình ngân sách mới:</p>
+                                <div class="math-block">\\[ 50X + 20Y = 5000 \\]</div>
+                                
+                                <p class="text-slate-700 mt-3 mb-2">Giải hệ:</p>
+                                <p class="text-slate-700 ml-4">\\( 50X + 20(2.5X) = 5000 \\Rightarrow 100X = 5000 \\Rightarrow X = 50 \\)</p>
+                                <p class="text-slate-700 ml-4">Suy ra: \\( Y = 2.5(50) = 125 \\)</p>
+                                
+                                <p class="text-emerald-700 font-bold mt-4">Cơ cấu mới: Mua 50 sản phẩm X và 125 sản phẩm Y.</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'bai-6',
+                title: 'Bài 6: Lựa chọn tiêu dùng (Bảng số liệu)',
+                type: 'exercise',
+                content: `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Bài 6: Tiêu dùng tối ưu qua bảng Lợi ích</h2>
+                        
+                        <p class="text-slate-700 mb-4">Để giải, trước hết ta cần tính <strong>Lợi ích cận biên (MU)</strong> cho từng mức số lượng: \\( MU = \\Delta TU / \\Delta Q \\).<br>
+                        Với \\( \\Delta Q = 1 \\), ta có \\( MU_n = TU_n - TU_{n-1} \\).</p>
+
+                        <div class="overflow-x-auto mb-6 rounded-lg border border-slate-200">
+                            <table class="min-w-full divide-y divide-gray-200 text-sm text-center">
+                                <thead class="bg-blue-50 text-blue-800">
+                                    <tr>
+                                        <th class="px-4 py-3 font-semibold">Q</th>
+                                        <th class="px-4 py-3 font-semibold">\\( TU_X \\)</th>
+                                        <th class="px-4 py-3 font-semibold">\\( MU_X \\)</th>
+                                        <th class="px-4 py-3 font-semibold">\\( MU_X / P_X \\) (P=10)</th>
+                                        <th class="px-4 py-3 font-semibold">\\( TU_Y \\)</th>
+                                        <th class="px-4 py-3 font-semibold">\\( MU_Y \\)</th>
+                                        <th class="px-4 py-3 font-semibold">\\( MU_Y / P_Y \\) (P=5)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr><td>1</td><td>60</td><td class="font-medium text-slate-700">60</td><td>6.0</td><td>20</td><td class="font-medium text-slate-700">20</td><td>4.0</td></tr>
+                                    <tr><td>2</td><td>110</td><td class="font-medium text-slate-700">50</td><td>5.0</td><td>38</td><td class="font-medium text-slate-700">18</td><td>3.6</td></tr>
+                                    <tr class="bg-yellow-50"><td>3</td><td>150</td><td class="font-medium text-slate-700">40</td><td class="font-bold text-blue-600">4.0</td><td>53</td><td class="font-medium text-slate-700">15</td><td>3.0</td></tr>
+                                    <tr><td>4</td><td>180</td><td class="font-medium text-slate-700">30</td><td>3.0</td><td>64</td><td class="font-medium text-slate-700">11</td><td>2.2</td></tr>
+                                    <tr class="bg-yellow-50"><td>5</td><td>200</td><td class="font-medium text-slate-700">20</td><td class="font-bold text-emerald-600">2.0</td><td>70</td><td class="font-medium text-slate-700">6</td><td>1.2</td></tr>
+                                    <tr><td>6</td><td>206</td><td class="font-medium text-slate-700">6</td><td>0.6</td><td>75</td><td class="font-medium text-slate-700">5</td><td>1.0</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <h4 class="font-semibold text-blue-700 mb-2">a. Cơ cấu tiêu dùng tối ưu (I = 55, Px=10, Py=5)</h4>
+                                <p class="text-slate-700 mb-2">Tìm các cặp (X, Y) sao cho tỷ số \\( \\frac{MU_X}{P_X} = \\frac{MU_Y}{P_Y} \\) nhưng chưa chắc thỏa mãn ngân sách.</p>
+                                <p class="text-slate-700 mb-2">Nhìn vào bảng (chỉ xét một phần): Không có điểm cân bằng tỷ số trực tiếp dễ nhìn. Ta rà soát việc chi tiêu đồng biên. Hoặc thử các kết hợp ngân sách.</p>
+                                <p class="text-slate-700 mb-2">Quy tắc chi tiêu đồng tiền cuối cùng: Chọn mua hàng hóa mang lại \\( MU/P \\) cao nhất.<br>
+                                - Mua X1 (MU/P=6, tốn 10, còn 45)<br>
+                                - Mua X2 (MU/P=5, tốn 10, còn 35)<br>
+                                - Mua X3 (MU/P=4) & Y1 (MU/P=4). Tốn 15, còn 20.<br>
+                                - Mua Y2 (3.6), Y3 (3.0), X4 (3.0). Tốn 5+5+10 = 20. Hết tiền!</p>
+                                <p class="text-slate-700 mt-2 font-medium">Dừng lại ở: X = 4, Y = 3. Kiểm tra: \\( 10(4) + 5(3) = 55 \\). Tuy nhiên, tại X=4, MU_X/Px = 3; Y=3, MU_Y/Py = 3. Thỏa mãn điều kiện!</p>
+                                <p class="text-emerald-700 font-bold mt-2">Kết quả: X = 4, Y = 3. Tổng lợi ích \\( TU = TU_X(4) + TU_Y(3) = 180 + 53 = 233 \\).</p>
+                            </div>
+                            
+                            <!-- Bỏ qua trình bày chi tiết b, c để code gọn, chỉ đưa đáp số -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                    <h4 class="font-semibold text-blue-700 mb-2">b. Khi thu nhập tăng lên 80 USD</h4>
+                                    <p class="text-slate-700 text-sm">Tiếp tục mua theo nguyên tắc trên cho đến hết 80$.</p>
+                                    <p class="text-slate-700 font-medium">Kết quả: Mua 6 đơn vị X và 4 đơn vị Y.<br> (Kiểm tra: \\( 6\\times10 + 4\\times5 = 80 \\). Tuy nhiên, cần xem tỷ số MU/P).</p>
+                                </div>
+                                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                    <h4 class="font-semibold text-blue-700 mb-2">c. Khi Px = 5, Py = 5 (I=55)</h4>
+                                    <p class="text-slate-700 text-sm">Lập cột MU_X/P_X mới (chia cho 5).</p>
+                                    <p class="text-slate-700 font-medium">Tối ưu: Mua số lượng sao cho MU_X = MU_Y và X+Y = 11. <br>Chọn X = 6, Y = 5. (MU_X=6, MU_Y=6. \\( 6\\times5 + 5\\times5 = 55 \\)).</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'bai-7',
+                title: 'Bài 7: Các loại Chi phí & Tối đa hóa Lợi nhuận',
+                type: 'exercise',
+                content: `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Bài 7: Hàm chi phí và Tối đa hóa lợi nhuận (Cạnh tranh hoàn hảo)</h2>
+                        
+                        <div class="bg-slate-100 p-4 rounded-lg mb-6">
+                            <p class="font-medium text-slate-800">Tổng chi phí: \\( TC = Q^2 + 2Q + 100 \\)</p>
+                            <p class="text-sm text-slate-600">Thị trường cạnh tranh hoàn hảo: DN bán theo giá P cho trước.</p>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <h4 class="font-semibold text-blue-700 mb-3">a. Xác định các hàm số</h4>
+                                <ul class="space-y-3 text-slate-700">
+                                    <li><strong>Tổng doanh thu (TR):</strong> \\( TR = P \\cdot Q \\)</li>
+                                    <li><strong>Doanh thu cận biên (MR):</strong> Vì P cố định, \\( MR = P \\)</li>
+                                    <li><strong>Chi phí cận biên (MC):</strong> Đạo hàm của TC. \\( MC = (Q^2 + 2Q + 100)' = 2Q + 2 \\)</li>
+                                    <li><strong>Chi phí cố định (FC):</strong> Hệ số tự do của TC. \\( FC = 100 \\)</li>
+                                    <li><strong>Chi phí biến đổi (VC):</strong> Phần chứa Q. \\( VC = Q^2 + 2Q \\)</li>
+                                    <li><strong>Chi phí biến đổi bình quân (AVC):</strong> \\( AVC = \\frac{VC}{Q} = Q + 2 \\)</li>
+                                    <li><strong>Chi phí cố định bình quân (AFC):</strong> \\( AFC = \\frac{100}{Q} \\)</li>
+                                    <li><strong>Tổng chi phí bình quân (ATC):</strong> \\( ATC = \\frac{TC}{Q} = Q + 2 + \\frac{100}{Q} \\)</li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <h4 class="font-semibold text-blue-700 mb-3">b. Nếu giá P = 50 USD/sp</h4>
+                                <p class="text-slate-700 mb-2">Để tối đa hóa lợi nhuận trong CTHH, điều kiện là: \\( P = MC \\)</p>
+                                <div class="math-block">\\[ 50 = 2Q + 2 \\Rightarrow 2Q = 48 \\Rightarrow Q = 24 \\]</div>
+                                <p class="text-slate-700 mt-2 mb-2">Tính lợi nhuận (\\( \\pi \\)):</p>
+                                <div class="math-block">\\[ \\pi = TR - TC = 50(24) - (24^2 + 2(24) + 100) \\]</div>
+                                <div class="math-block">\\[ \\pi = 1200 - (576 + 48 + 100) = 1200 - 724 = 476 \\text{ (USD)} \\]</div>
+                            </div>
+
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <h4 class="font-semibold text-blue-700 mb-3">c. Nếu giá giảm xuống P = 20 USD/sp</h4>
+                                <p class="text-slate-700 mb-2">Tìm mức sản lượng tối ưu (nếu sản xuất): \\( P = MC \\Rightarrow 20 = 2Q + 2 \\Rightarrow Q = 9 \\).</p>
+                                <p class="text-slate-700 mb-2">Tại Q = 9, tính AVC: \\( AVC = Q + 2 = 9 + 2 = 11 \\).</p>
+                                <p class="text-slate-700 mb-2">So sánh P và AVC: \\( P (20) > AVC (11) \\).</p>
+                                <p class="font-medium text-emerald-700">Quyết định: Doanh nghiệp NÊN tiếp tục sản xuất mức Q=9. <br><span class="text-slate-600 font-normal">Giải thích: Dù có thể lỗ vốn (vì P có thể < ATC), nhưng P > AVC giúp doanh nghiệp bù đắp được toàn bộ chi phí biến đổi và một phần chi phí cố định. Nếu đóng cửa sẽ lỗ toàn bộ chi phí cố định (100).</span></p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'bai-8',
+                title: 'Bài 8: Độc quyền & Các loại mục tiêu, Thuế',
+                type: 'exercise',
+                content: `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Bài 8: Quyết định của Doanh nghiệp Độc quyền</h2>
+                        
+                        <div class="bg-slate-100 p-4 rounded-lg mb-6 grid gap-2">
+                            <p><strong>Cầu:</strong> \\( Q = 3000 - 2.5P \\Rightarrow 2.5P = 3000 - Q \\Rightarrow P = 1200 - 0.4Q \\)</p>
+                            <p><strong>ATC:</strong> \\( 0.6Q + 400 + \\frac{500}{Q} \\)</p>
+                            <p class="text-blue-700 font-medium">\\( \\Rightarrow TC = ATC \\cdot Q = 0.6Q^2 + 400Q + 500 \\)</p>
+                            <p class="text-blue-700 font-medium">\\( \\Rightarrow MC = TC' = 1.2Q + 400 \\)</p>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <h4 class="font-semibold text-blue-700 mb-2">a. Tối đa hóa doanh thu</h4>
+                                <p class="text-slate-700 mb-2">Hàm doanh thu: \\( TR = P \\cdot Q = 1200Q - 0.4Q^2 \\)</p>
+                                <p class="text-slate-700 mb-2">Doanh thu cận biên: \\( MR = 1200 - 0.8Q \\)</p>
+                                <p class="text-slate-700 mb-2">Doanh thu đạt Max khi \\( MR = 0 \\):</p>
+                                <div class="math-block">\\[ 1200 - 0.8Q = 0 \\Rightarrow Q = 1500 \\]</div>
+                                <p class="text-slate-700">Giá bán: \\( P = 1200 - 0.4(1500) = 600 \\).<br> Doanh thu Max: \\( TR = 600 \\times 1500 = 900,000 \\).</p>
+                            </div>
+
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <h4 class="font-semibold text-blue-700 mb-2">b. Tối đa hóa lợi nhuận</h4>
+                                <p class="text-slate-700 mb-2">Điều kiện: \\( MR = MC \\)</p>
+                                <div class="math-block">\\[ 1200 - 0.8Q = 1.2Q + 400 \\Rightarrow 2Q = 800 \\Rightarrow Q = 400 \\]</div>
+                                <p class="text-slate-700 mb-2">Giá bán: \\( P = 1200 - 0.4(400) = 1040 \\).</p>
+                                <p class="text-slate-700 font-medium">Lợi nhuận: \\( \\pi = 1040(400) - (0.6 \\cdot 400^2 + 400 \\cdot 400 + 500) = 159,500 \\).</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                                    <h4 class="font-semibold text-red-700 mb-2">c. Chịu thuế tiêu thụ 4 USD/sp</h4>
+                                    <p class="text-slate-700 text-sm mb-2">Thuế tính theo sản lượng làm tăng MC.<br>\\( MC' = MC + 4 = 1.2Q + 404 \\)</p>
+                                    <p class="text-slate-700 text-sm">Cân bằng mới (MR=MC'):<br>\\( 1200 - 0.8Q = 1.2Q + 404 \\)<br>\\( \\Rightarrow 2Q = 796 \\Rightarrow Q = 398 \\)<br>\\( P = 1200 - 0.4(398) = 1040.8 \\)</p>
+                                </div>
+                                <div class="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                                    <h4 class="font-semibold text-orange-700 mb-2">d. Thuế khoán 8,000 USD</h4>
+                                    <p class="text-slate-700 text-sm">Thuế khoán (tổng cục) là một dạng <strong>chi phí cố định (FC)</strong> mới, <strong>KHÔNG</strong> làm thay đổi MC.</p>
+                                    <p class="text-slate-700 text-sm font-medium">Do MC không đổi, Q và P giữ nguyên như câu b: Q = 400, P = 1040.</p>
+                                    <p class="text-slate-700 text-sm">Lợi nhuận giảm 8000: \\( \\pi' = 159500 - 8000 = 151,500 \\).</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'bai-9',
+                title: 'Bài 9: Ràng buộc Lợi nhuận',
+                type: 'exercise',
+                content: `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Bài 9: Các mục tiêu sản xuất</h2>
+                        
+                        <div class="flex gap-4 text-slate-700 mb-6 p-4 bg-slate-100 rounded-lg">
+                            <div>\\( P = 12 - 0.4Q \\) <br>\\( MR = 12 - 0.8Q \\)</div>
+                            <div class="border-l border-slate-300 pl-4">\\( TC = 0.6Q^2 + 4Q + 5 \\) <br>\\( MC = 1.2Q + 4 \\)</div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="bg-white border-l-4 border-emerald-500 shadow-sm p-4">
+                                <h4 class="font-bold text-emerald-700">a. Tối đa hóa lợi nhuận (\\( \\pi_{\\max} \\))</h4>
+                                <p class="text-slate-700">\\( MR = MC \\Rightarrow 12 - 0.8Q = 1.2Q + 4 \\Rightarrow 2Q = 8 \\Rightarrow Q = 4 \\)</p>
+                                <p class="text-slate-700">\\( P = 12 - 0.4(4) = 10.4 \\)</p>
+                                <p class="text-slate-700">\\( \\pi = TR - TC = 10.4(4) - (0.6 \\cdot 16 + 16 + 5) = 41.6 - 30.6 = 11 \\)</p>
+                            </div>
+
+                            <div class="bg-white border-l-4 border-blue-500 shadow-sm p-4">
+                                <h4 class="font-bold text-blue-700">b. Tối đa hóa doanh thu (\\( TR_{\\max} \\))</h4>
+                                <p class="text-slate-700">\\( MR = 0 \\Rightarrow 12 - 0.8Q = 0 \\Rightarrow Q = 15 \\)</p>
+                                <p class="text-slate-700">\\( P = 12 - 0.4(15) = 6 \\)</p>
+                                <p class="text-slate-700">\\( TR = 15 \\times 6 = 90 \\)</p>
+                            </div>
+
+                            <div class="bg-white border-l-4 border-purple-500 shadow-sm p-4">
+                                <h4 class="font-bold text-purple-700">c. Tối đa hóa TR kèm ràng buộc Lợi nhuận = 10</h4>
+                                <p class="text-slate-700 mb-2">Thiết lập phương trình lợi nhuận: \\( TR - TC = 10 \\)</p>
+                                <div class="math-block">\\[ (12Q - 0.4Q^2) - (0.6Q^2 + 4Q + 5) = 10 \\]</div>
+                                <div class="math-block">\\[ -Q^2 + 8Q - 15 = 0 \\]</div>
+                                <p class="text-slate-700 mt-2">Giải phương trình bậc 2, ta được 2 nghiệm: \\( Q_1 = 3 \\) và \\( Q_2 = 5 \\).</p>
+                                <p class="text-slate-700 mt-2">Vì mục tiêu là Tối đa hóa doanh thu (TR), ta tính TR tại 2 mức Q này:<br>
+                                - Tại Q = 3: \\( TR = 12(3) - 0.4(9) = 32.4 \\)<br>
+                                - Tại Q = 5: \\( TR = 12(5) - 0.4(25) = 50 \\)</p>
+                                <p class="font-bold text-purple-800 mt-2">Quyết định chọn Q = 5, Giá P = 10.</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'bai-10',
+                title: 'Bài 10: Phân tích chi phí qua Bảng',
+                type: 'exercise',
+                content: `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Bài 10: Điểm hòa vốn & Đóng cửa</h2>
+                        
+                        <p class="text-slate-700 mb-4">Nhận xét: Tại \\( Q = 0 \\), \\( TC = 50 \\). Vậy <strong>Chi phí cố định (FC) = 50</strong> tại mọi mức sản lượng.<br> Từ đó: \\( VC = TC - 50 \\); \\( MC = \\Delta TC / \\Delta Q \\).</p>
+
+                        <div class="overflow-x-auto mb-6 rounded-lg border border-slate-200">
+                            <table class="min-w-full divide-y divide-gray-200 text-sm text-center">
+                                <thead class="bg-indigo-50 text-indigo-800">
+                                    <tr>
+                                        <th class="px-2 py-2">Q</th>
+                                        <th class="px-2 py-2">TC</th>
+                                        <th class="px-2 py-2">FC</th>
+                                        <th class="px-2 py-2">VC</th>
+                                        <th class="px-2 py-2 font-bold text-red-600">MC</th>
+                                        <th class="px-2 py-2">AFC</th>
+                                        <th class="px-2 py-2">AVC</th>
+                                        <th class="px-2 py-2 font-bold text-blue-600">ATC</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr><td>0</td><td>50</td><td>50</td><td>0</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr><td>1</td><td>55</td><td>50</td><td>5</td><td class="font-medium">5</td><td>50.0</td><td>5.0</td><td>55.0</td></tr>
+                                    <tr><td>2</td><td>62</td><td>50</td><td>12</td><td class="font-medium">7</td><td>25.0</td><td>6.0</td><td>31.0</td></tr>
+                                    <tr><td>3</td><td>72</td><td>50</td><td>22</td><td class="font-medium">10</td><td>16.7</td><td>7.3</td><td>24.0</td></tr>
+                                    <tr><td>4</td><td>96</td><td>50</td><td>46</td><td class="font-medium">24</td><td>12.5</td><td>11.5</td><td>24.0</td></tr>
+                                    <tr><td>5</td><td>125</td><td>50</td><td>75</td><td class="font-medium">29</td><td>10.0</td><td>15.0</td><td>25.0</td></tr>
+                                    <tr><td>6</td><td>162</td><td>50</td><td>112</td><td class="font-medium">37</td><td>8.3</td><td>18.7</td><td class="font-bold text-blue-600 bg-blue-50">27.0</td></tr>
+                                    <tr><td>7</td><td>203</td><td>50</td><td>153</td><td class="font-medium bg-red-50 text-red-700">41</td><td>7.1</td><td>21.9</td><td>29.0</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <h4 class="font-semibold text-blue-700 mb-2">b. Mức giá hòa vốn và đóng cửa</h4>
+                                <ul class="list-disc pl-5 text-slate-700 space-y-2">
+                                    <li><strong>Giá hòa vốn:</strong> Là mức thấp nhất của Tổng chi phí bình quân \\( \\min(ATC) \\). Nhìn bảng, ATC đạt giá trị nhỏ nhất tại Q=3 và Q=4 (ATC=24). Tuy nhiên, thông thường ta vẽ đồ thị hình chữ U, lấy điểm cực tiểu. <em>Trong phạm vi bảng rời rạc, giá hòa vốn xấp xỉ 24.</em></li>
+                                    <li><strong>Giá đóng cửa:</strong> Là mức thấp nhất của Chi phí biến đổi bình quân \\( \\min(AVC) \\). Trong bảng, nhỏ nhất là 5 (tại Q=1).</li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <h4 class="font-semibold text-blue-700 mb-2">c. Khi giá thị trường P = 29</h4>
+                                <p class="text-slate-700 mb-2">Quy tắc CTHH: Sản xuất tại Q sao cho \\( P = MC \\). Nhìn bảng, tại Q=5, MC = 29.</p>
+                                <p class="text-slate-700 mb-2">Kiểm tra: Tại Q=5, P=29 > AVC(15) -> Tiếp tục sản xuất.</p>
+                                <p class="text-slate-700 font-medium">Sản lượng tối ưu: Q = 5.</p>
+                                <p class="text-slate-700">Lợi nhuận: \\( \\pi = TR - TC = 29(5) - 125 = 145 - 125 = 20 \\) USD.</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'bai-11-15',
+                title: 'Bài 11 - 15: Độc quyền & Cạnh tranh HH',
+                type: 'exercise',
+                content: `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Tuyển tập Bài 11 - 15</h2>
+                        
+                        <!-- Bài 11 -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-bold text-indigo-700 mb-3 flex items-center gap-2">
+                                <span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-sm">11</span> AC không đổi
+                            </h3>
+                            <div class="bg-slate-50 p-4 rounded-lg text-slate-700">
+                                <p><strong>Đề:</strong> \\( P = 40 - Q \\), AC = 10 (mọi Q).</p>
+                                <p class="mt-2">a. AC không đổi mọi Q nghĩa là \\( AC = MC = 10 \\). Công thức \\( AC = VC/Q + FC/Q = c + FC/Q \\). Để không phụ thuộc Q, \\( FC = 0 \\).</p>
+                                <p class="mt-2">b. Max LN: \\( MR = MC \\Rightarrow 40 - 2Q = 10 \\Rightarrow Q = 15, P = 25 \\).</p>
+                                <p class="mt-2">c. Độ co giãn: \\( E_D = \\frac{\\partial Q}{\\partial P} \\cdot \\frac{P}{Q} = -1 \\cdot \\frac{25}{15} = -1.67 \\). Vì \\( |E_D| > 1 \\), cầu đang ở miền co giãn, nếu giảm giá doanh thu sẽ TĂNG. Doanh thu Max khi \\( |E_D| = 1 \\) (MR=0).</p>
+                            </div>
+                        </div>
+
+                        <!-- Bài 12 -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-bold text-indigo-700 mb-3 flex items-center gap-2">
+                                <span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-sm">12</span> Độc quyền chịu thuế
+                            </h3>
+                            <div class="bg-slate-50 p-4 rounded-lg text-slate-700">
+                                <p><strong>Đề:</strong> \\( P = 100 - 0.01Q \\), \\( TC = 50Q + 30000 \\).</p>
+                                <p class="mt-2">a. \\( MR = 100 - 0.02Q \\), \\( MC = 50 \\). Max LN: \\( 100 - 0.02Q = 50 \\Rightarrow Q = 2500, P = 75 \\).</p>
+                                <p class="mt-2">b. Thuế t=10/sp \\( \\Rightarrow MC' = MC + 10 = 60 \\). Cân bằng mới: \\( 100 - 0.02Q = 60 \\Rightarrow Q = 2000, P = 80 \\).</p>
+                            </div>
+                        </div>
+
+                        <!-- Bài 13 -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-bold text-indigo-700 mb-3 flex items-center gap-2">
+                                <span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-sm">13</span> CTHH Ngắn hạn
+                            </h3>
+                            <div class="bg-slate-50 p-4 rounded-lg text-slate-700 text-sm">
+                                <p>Cung: \\( Q = 0.5(P - 3) \\Rightarrow P = 2Q + 3 \\) (Đây là đường MC).</p>
+                                <p class="mt-2">a. \\( MC = 2Q + 3 \\). Tích phân MC -> \\( VC = Q^2 + 3Q \\). \\( TC = Q^2 + 3Q + 225 \\).</p>
+                                <p class="mt-2">b. Đóng cửa: \\( \\min(AVC) = \\min(Q+3) = 3 \\). Hòa vốn: \\( MC = ATC \\Rightarrow 2Q + 3 = Q + 3 + 225/Q \\Rightarrow Q = 15 \\Rightarrow P = 33 \\).</p>
+                                <p class="mt-2">c. P = 25. Sản xuất ở Q: \\( 2Q+3 = 25 \\Rightarrow Q=11 \\). LN = -104. P(25) > Đóng cửa(3) -> Tiếp tục SX.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Bài 15 -->
+                        <div>
+                            <h3 class="text-lg font-bold text-indigo-700 mb-3 flex items-center gap-2">
+                                <span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-sm">15</span> Mối quan hệ Độ co giãn & Doanh thu
+                            </h3>
+                            <div class="bg-amber-50 p-4 rounded-lg text-slate-800 text-sm border border-amber-200">
+                                <p><strong>Đề:</strong> \\( Q_D = 186 - 5P \\) -> Hàm nghịch: \\( P = 37.2 - 0.2Q \\).</p>
+                                <p class="mt-2">a. P = 18 \\( \\Rightarrow Q = 96 \\). \\( E_D = -5 \\cdot (18/96) = -0.9375 \\). Cầu kém co giãn.</p>
+                                <p class="mt-2 font-medium">b. Đang bán P=18 (kém co giãn), tăng giá (lên 20) sẽ làm giảm lượng mua ít, dẫn đến Tổng Doanh thu (TR) <strong>TĂNG</strong>. Dự định Đúng.</p>
+                                <p class="mt-2">c. P=22, Q=76. \\( LN = (P - ATC) \\cdot Q = (22 - 20) \\times 76 = 152 \\). Kiểm tra LN ở giá hiện tại để so sánh xem có khả thi không.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                `
+            }
+        ];
+
+        // --- Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const navMenu = document.getElementById('nav-menu');
+            const contentContainer = document.getElementById('content-container');
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+            
+            let currentTab = 'formulas';
+
+            // Build Sidebar
+            studyData.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left px-4 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors duration-200 
+                                ${item.id === currentTab 
+                                    ? 'bg-blue-50 text-blue-700' 
+                                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`;
+                btn.innerHTML = item.type === 'reference' 
+                    ? `<span class="flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>${item.title}</span>`
+                    : item.title;
+                btn.onclick = () => selectTab(item.id, btn);
+                navMenu.appendChild(btn);
+            });
+
+            // Initial render
+            renderContent(currentTab);
+
+            // Handle selection
+            function selectTab(id, activeBtn) {
+                currentTab = id;
+                
+                // Update UI active state
+                Array.from(navMenu.children).forEach(child => {
+                    child.className = `w-full text-left px-4 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors duration-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900`;
+                });
+                activeBtn.className = `w-full text-left px-4 py-2.5 rounded-lg mb-1 text-sm font-medium transition-colors duration-200 bg-blue-50 text-blue-700`;
+                
+                renderContent(id);
+
+                // Close mobile menu if open
+                if (window.innerWidth <= 768) {
+                    toggleMobileMenu(false);
+                }
+            }
+
+            // Render Content & trigger MathJax
+            function renderContent(id) {
+                const data = studyData.find(d => d.id === id);
+                if (data) {
+                    // Hide briefly for a smooth transition
+                    contentContainer.style.opacity = '0';
+                    setTimeout(() => {
+                        contentContainer.innerHTML = data.content;
+                        contentContainer.style.transition = 'opacity 0.3s ease';
+                        contentContainer.style.opacity = '1';
+                        
+                        // Tell MathJax to re-render the new HTML
+                        if (window.MathJax) {
+                            MathJax.typesetPromise([contentContainer]).catch(function (err) {
+                                console.error('MathJax error: ', err.message);
+                            });
+                        }
+                    }, 50);
+                }
+            }
+
+            // Mobile Menu Toggle
+            function toggleMobileMenu(forceState) {
+                const isOpen = sidebar.classList.contains('open');
+                const newState = forceState !== undefined ? forceState : !isOpen;
+                
+                if (newState) {
+                    sidebar.classList.add('open');
+                    sidebarOverlay.classList.remove('hidden');
+                } else {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.add('hidden');
+                }
+            }
+
+            mobileMenuBtn.addEventListener('click', () => toggleMobileMenu());
+            sidebarOverlay.addEventListener('click', () => toggleMobileMenu(false));
+        });
+    </script>
+</body>
+</html>
